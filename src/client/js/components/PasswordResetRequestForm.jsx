@@ -1,11 +1,36 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withTranslation } from 'react-i18next';
+import { withUnstatedContainers } from './UnstatedUtils';
+import { toastSuccess, toastError } from '../util/apiNotification';
+import AppContainer from '../services/AppContainer';
 
 
 const PasswordResetRequestForm = (props) => {
   // TODO: apply i18n by GW-6861
   // const { t } = props;
+
+  const {
+    appContainer,
+  } = props;
+
+  const onClickSendPasswordResetRequestMail = async(email) => {
+    try {
+      const res = await appContainer.apiPost('/forgot-password', { });
+      const { failedToSendEmail } = res.data;
+      if (failedToSendEmail == null) {
+        const msg = `Email has been sent<br>・${email}`;
+        toastSuccess(msg);
+      }
+      // else {
+      //   const msg = { message: `email: ${failedToSendEmail.email}<br>reason: ${failedToSendEmail.reason}` };
+      //   toastError(msg);
+      // }
+    }
+    catch (err) {
+      toastError(err);
+    }
+  };
 
   return (
     <>
@@ -23,7 +48,13 @@ const PasswordResetRequestForm = (props) => {
                   </div>
                 </div>
                 <div className="form-group">
-                  <input name="reset-password-btn" className="btn btn-lg btn-primary btn-block" value="Reset Password" type="submit" />
+                  <input
+                    name="reset-password-btn"
+                    className="btn btn-lg btn-primary btn-block"
+                    value="Reset Password"
+                    type="submit"
+                    onClick={() => { onClickSendPasswordResetRequestMail() }}
+                  />
                 </div>
                 <a href="/login">
                   <i className="icon-login mr-1"></i>Return to login
@@ -39,8 +70,14 @@ const PasswordResetRequestForm = (props) => {
   );
 };
 
+/**
+ * Wrapper component for using unstated
+ */
+const PasswordResetRequestFormWrapper = withUnstatedContainers(PasswordResetRequestForm, [AppContainer]);
+
 PasswordResetRequestForm.propTypes = {
+  appContainer: PropTypes.instanceOf(AppContainer).isRequired,
   t: PropTypes.func.isRequired, //  i18next
 };
 
-export default withTranslation()(PasswordResetRequestForm);
+export default withTranslation()(PasswordResetRequestFormWrapper);
